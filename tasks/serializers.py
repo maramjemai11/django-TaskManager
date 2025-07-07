@@ -26,3 +26,11 @@ class TaskSerializer(serializers.ModelSerializer):
             'completed_date', 'status', 'priority', 'user'
         ]
         read_only_fields = ['id', 'created_date', 'completed_date', 'user']
+
+
+class TaskFilterSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=[choice[0] for choice in Task.STATUS_CHOICES], required=False)
+    sort = serializers.ChoiceField(choices=[
+        'title', '-title', 'due_date', '-due_date', 
+        'priority', '-priority', 'created_date', '-created_date'
+    ], required=False, default='-created_date')

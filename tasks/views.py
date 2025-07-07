@@ -6,8 +6,9 @@ from django.http import JsonResponse
 from .models import Task
 from .forms import TaskForm, UserRegisterForm
 from rest_framework import viewsets, permissions, generics
-from .serializers import TaskSerializer,RegisterSerializer
+from .serializers import TaskSerializer,RegisterSerializer,TaskFilterSerializer
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 
 # Create your views here.
 
@@ -19,24 +20,29 @@ def task_list(request):
     """
     tasks = Task.objects.filter(user=request.user)
     
-    # Filter by status if provided
+    # Filtering
     status_filter = request.GET.get('status')
     if status_filter:
         tasks = tasks.filter(status=status_filter)
     
-    # Sort by different criteria
+    # Sorting
     sort_by = request.GET.get('sort', '-created_date')
     if sort_by in ['title', '-title', 'due_date', '-due_date', 'priority', '-priority', 'created_date', '-created_date']:
         tasks = tasks.order_by(sort_by)
     
-    # Calculate statistics
+    # Pagination
+    paginator = Paginator(tasks, 5)  # Show 5 tasks per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Statistics
     total_tasks = tasks.count()
     pending_tasks = tasks.filter(status='pending').count()
     in_progress_tasks = tasks.filter(status='in_progress').count()
     completed_tasks = tasks.filter(status='completed').count()
     
     context = {
-        'tasks': tasks,
+        'page_obj': page_obj,  # Use this in your template
         'status_choices': Task.STATUS_CHOICES,
         'current_status': status_filter,
         'current_sort': sort_by,

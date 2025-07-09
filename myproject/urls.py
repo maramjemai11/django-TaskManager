@@ -24,12 +24,25 @@ from rest_framework_simplejwt.views import (
 from tasks.views import register
 
 urlpatterns = [
+    # Admin site
     path('admin/', admin.site.urls),
+
+    # Task management app (web)
     path('tasks/', include('tasks.urls')),
+
+    # Django built-in authentication (login, logout, password management)
     path('accounts/', include('django.contrib.auth.urls')),
+
+    # Home redirects to task list
     path('', lambda request: redirect('tasks:task_list'), name='home'),
+
+    # Task management app (API)
     path('api/', include('tasks.api_urls')),
+
+    # JWT authentication endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # User registration (web form)
     path('register/', register, name='register'),
 ]

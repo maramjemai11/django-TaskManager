@@ -26,6 +26,21 @@ A personal task management web application built with Django and Django REST Fra
 
 ---
 
+## 📁 Project Structure
+
+```
+django-task-manager/
+├── manage.py
+├── myproject/           # Project settings and root URLs
+├── tasks/               # Main app: models, views, serializers, forms, URLs
+├── templates/           # HTML templates
+├── requirements.txt     # Python dependencies
+├── README.md            # Project documentation
+└── ...
+```
+
+---
+
 ## 📦 Setup Instructions
 
 1. **Clone the repo**
@@ -76,6 +91,23 @@ python manage.py runserver
 ```
 
 Visit: [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
+
+---
+
+## 📚 Dependencies
+
+Key dependencies (see `requirements.txt` for full list):
+- Django >=5.0
+- djangorestframework
+- djangorestframework-simplejwt
+- python-dotenv
+- (and others)
+
+To add a new dependency:
+```bash
+pip install <package>
+pip freeze > requirements.txt
+```
 
 ---
 

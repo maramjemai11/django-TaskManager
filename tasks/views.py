@@ -6,11 +6,20 @@ from django.http import JsonResponse
 from .models import Task
 from .forms import TaskForm, UserRegisterForm
 from rest_framework import viewsets, permissions, generics
-from .serializers import TaskSerializer,RegisterSerializer,TaskFilterSerializer
+from .serializers import TaskSerializer, RegisterSerializer, TaskFilterSerializer
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
+from .constants import TaskStatus, TaskPriority
+import logging
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
+
+
 
 @login_required
 def task_list(request):
@@ -37,13 +46,13 @@ def task_list(request):
     
     # Statistics
     total_tasks = tasks.count()
-    pending_tasks = tasks.filter(status='pending').count()
-    in_progress_tasks = tasks.filter(status='in_progress').count()
-    completed_tasks = tasks.filter(status='completed').count()
+    pending_tasks = tasks.filter(status=TaskStatus.PENDING).count()
+    in_progress_tasks = tasks.filter(status=TaskStatus.IN_PROGRESS).count()
+    completed_tasks = tasks.filter(status=TaskStatus.COMPLETED).count()
     
     context = {
         'page_obj': page_obj,  # Use this in your template
-        'status_choices': Task.STATUS_CHOICES,
+        'status_choices': TaskStatus.choices(),
         'current_status': status_filter,
         'current_sort': sort_by,
         'total_tasks': total_tasks,
@@ -108,8 +117,12 @@ def task_delete(request, pk):
     task = get_object_or_404(Task, pk=pk, user=request.user)
     
     if request.method == 'POST':
-        task.delete()
-        messages.success(request, 'Task deleted successfully!')
+        try:
+            task.delete()
+            messages.success(request, 'Task deleted successfully!')
+        except Exception as e:
+            logger.error(f"Error deleting task {pk}: {e}")
+            messages.error(request, 'An error occurred while deleting the task.')
         return redirect('tasks:task_list')
     
     context = {
@@ -125,12 +138,12 @@ def task_toggle_complete(request, pk):
     """
     task = get_object_or_404(Task, pk=pk, user=request.user)
     
-    if task.status == 'completed':
-        task.status = 'pending'
+    if task.status == TaskStatus.COMPLETED:
+        task.status = TaskStatus.PENDING
         task.completed_date = None
         message = 'Task marked as pending'
     else:
-        task.status = 'completed'
+        task.status = TaskStatus.COMPLETED
         task.completed_date = timezone.now()
         message = 'Task marked as completed'
     
@@ -158,6 +171,9 @@ def task_detail(request, pk):
     return render(request, 'tasks/task_detail.html', context)
 
 class TaskViewSet(viewsets.ModelViewSet):
+    """
+    API viewset for Task model. Only returns tasks for the logged-in user.
+    """
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -171,11 +187,17 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 class RegisterView(generics.CreateAPIView):
+    """
+    API view for user registration.
+    """
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = []  # Allow any user (authenticated or not) to access this view
 
 def register(request):
+    """
+    Handle user registration via form.
+    """
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():

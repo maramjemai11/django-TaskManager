@@ -1,5 +1,5 @@
 # # 🗂️ Django Task Manager with REST API
-
+readme changed on branch1
 A personal task management web application built with Django and Django REST Framework. Users can register, log in, and manage their own tasks via a web interface or API. The project was created as part of my internship to learn development using Django.
 
 ---

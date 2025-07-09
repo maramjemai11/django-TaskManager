@@ -22,5 +22,5 @@ urlpatterns = [
 
     # User registration (API view)
     path('register/', views.RegisterView.as_view(), name='register'),
-    path('task_list1/', views.get_my_tasks, name='task_list1'),
+    
 ] 
